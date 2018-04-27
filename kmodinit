@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [[ $# -eq 0 ]] ; then
+  echo "Usage: kmodinit MODULE_NAME"
+  exit 1
+fi
+
+cat << EOS > Makefile
+obj-m += $1.o
+all:
+`echo -en "\t"`make -C /lib/modules/`uname -r`/build M=`pwd` modules
+clean:
+`echo -en "\t"`make -C /lib/modules/`uname -r`/build M=`pwd` clean
+insmod:
+`echo -en "\t"`sudo insmod $1.ko
+rmmod:
+`echo -en "\t"`sudo rmmod $1
+EOS
+
+cat << EOS > $1.c
+#include <linux/module.h>
+
+MODULE_LICENSE("GPL v2");
+MODULE_AUTHOR("");
+MODULE_DESCRIPTION("");
+
+static int $1_init(void)
+{
+  return 0;
+}
+
+static void $1_exit(void)
+{
+}
+
+module_init($1_init);
+module_exit($1_exit);
+EOS
